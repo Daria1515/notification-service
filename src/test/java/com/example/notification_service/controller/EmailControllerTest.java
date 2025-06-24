@@ -15,6 +15,8 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.notification_service.service.EmailService;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,6 +33,9 @@ class EmailControllerTest {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @MockBean
+    private EmailService emailService;
 
     @Test
     void testSendEmail() throws Exception {
