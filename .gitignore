@@ -31,3 +31,23 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+*.log
+logs/
+
+### Environment ###
+.env
+
+### Temporary files ###
+*.tmp
+*.bak
+*.old
+*.swp
+
+### OS files ###
+.DS_Store
+Thumbs.db
+
+### --- ###
+src\main\java\com\example\notification_service\controller\TestController.java

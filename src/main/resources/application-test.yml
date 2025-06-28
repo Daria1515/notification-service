@@ -4,17 +4,13 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: notification-group-new
+      group-id: notification-group
       auto-offset-reset: earliest
-      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
-        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: '*'
         spring.json.type.mapping: user-event:com.example.notification_service.kafka.UserEvent
-        spring.json.use.type.headers: true
-        spring.json.fail.on.unknown.properties: false
   mail:
     host: smtp.gmail.com
     port: 587
@@ -34,3 +30,4 @@ logging:
   level:
     com.example.notification_service: DEBUG
     org.springframework.kafka: DEBUG
+    root: INFO 
