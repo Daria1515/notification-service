@@ -1,49 +1,113 @@
 package com.example.notification_service.controller;
-//интеграционные тесты
-import com.example.notification_service.dto.EmailRequest;
+
+import com.example.notification_service.service.EmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.example.notification_service.service.EmailService;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@WebMvcTest(EmailController.class)
 class EmailControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper mapper;
-
     @MockBean
     private EmailService emailService;
 
     @Test
-    void testSendEmail() throws Exception {
-        EmailRequest request = new EmailRequest("test@example.com", "Test subject", "Hello!");
+    void testSendTestEmail_Success() throws Exception {
+        // Arrange
+        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
 
-        mockMvc.perform(post("/api/email")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+        // Act & Assert
+        mockMvc.perform(post("/api/email/send")
+                .param("to", "test@example.com")
+                .param("subject", "Test Subject")
+                .param("body", "Test Body"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Письмо успешно отправлено на test@example.com"));
+    }
+
+    @Test
+    void testSendTestEmail_Error() throws Exception {
+        // Arrange
+        doThrow(new RuntimeException("SMTP error")).when(emailService).sendEmail(anyString(), anyString(), anyString());
+
+        // Act & Assert
+        mockMvc.perform(post("/api/email/send")
+                .param("to", "test@example.com")
+                .param("subject", "Test Subject")
+                .param("body", "Test Body"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Ошибка отправки: SMTP error"));
+    }
+
+    @Test
+    void testSendWelcomeEmail_Success() throws Exception {
+        // Arrange
+        doNothing().when(emailService).sendWelcomeEmail(anyString(), anyString());
+
+        // Act & Assert
+        mockMvc.perform(post("/api/email/welcome")
+                .param("to", "test@example.com")
+                .param("userName", "TestUser"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Приветственное письмо отправлено на test@example.com"));
+    }
+
+    @Test
+    void testSendWelcomeEmail_Error() throws Exception {
+        // Arrange
+        doThrow(new RuntimeException("SMTP error")).when(emailService).sendWelcomeEmail(anyString(), anyString());
+
+        // Act & Assert
+        mockMvc.perform(post("/api/email/welcome")
+                .param("to", "test@example.com")
+                .param("userName", "TestUser"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Ошибка отправки: SMTP error"));
+    }
+
+    @Test
+    void testSendGoodbyeEmail_Success() throws Exception {
+        // Arrange
+        doNothing().when(emailService).sendGoodbyeEmail(anyString(), anyString());
+
+        // Act & Assert
+        mockMvc.perform(post("/api/email/goodbye")
+                .param("to", "test@example.com")
+                .param("userName", "TestUser"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Прощальное письмо отправлено на test@example.com"));
+    }
+
+    @Test
+    void testSendGoodbyeEmail_Error() throws Exception {
+        // Arrange
+        doThrow(new RuntimeException("SMTP error")).when(emailService).sendGoodbyeEmail(anyString(), anyString());
+
+        // Act & Assert
+        mockMvc.perform(post("/api/email/goodbye")
+                .param("to", "test@example.com")
+                .param("userName", "TestUser"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Ошибка отправки: SMTP error"));
+    }
+
+    @Test
+    void testTestEmailService() throws Exception {
+        // Act & Assert
+        mockMvc.perform(get("/api/email/test"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Email сервис работает корректно"));
     }
 }

@@ -27,18 +27,44 @@ public class KafkaConsumer {
                    topic, partition, offset, event);
         
         try {
-            String message = switch (event.getOperation()) {
-                case UserEvent.OPERATION_CREATE -> "Здравствуйте! Ваш аккаунт на сайте успешно создан.";
-                case UserEvent.OPERATION_DELETE -> "Здравствуйте! Ваш аккаунт был удалён.";
-                default -> "Операция неизвестна";
-            };
+            // Извлекаем имя пользователя из email (часть до @)
+            String userName = extractUserName(event.getEmail());
             
-            logger.info("Отправляем email на {} с сообщением: {}", event.getEmail(), message);
-            emailService.sendEmail(event.getEmail(), "Уведомление", message);
-            logger.info("Email успешно отправлен");
+            switch (event.getOperation()) {
+                case UserEvent.OPERATION_CREATE -> {
+                    logger.info("Отправляем приветственное письмо на {}", event.getEmail());
+                    emailService.sendWelcomeEmail(event.getEmail(), userName);
+                    logger.info("Приветственное письмо успешно отправлено");
+                }
+                case UserEvent.OPERATION_DELETE -> {
+                    logger.info("Отправляем прощальное письмо на {}", event.getEmail());
+                    emailService.sendGoodbyeEmail(event.getEmail(), userName);
+                    logger.info("Прощальное письмо успешно отправлено");
+                }
+                default -> {
+                    logger.warn("Неизвестная операция: {}", event.getOperation());
+                    String message = "Произошла операция с вашим аккаунтом: " + event.getOperation();
+                    emailService.sendEmail(event.getEmail(), "Уведомление о системе", message);
+                }
+            }
             
         } catch (Exception e) {
-            logger.error("Ошибка при обработке события: {}", e.getMessage(), e);
+            logger.error("Ошибка при обработке события: {}", e.getMessage(), e);            
         }
     }
+    
+    private String extractUserName(String email) {
+        if (email == null || email.isEmpty()) {
+            return "Пользователь";
+        }
+        
+        int atIndex = email.indexOf('@');
+        if (atIndex > 0) {
+            String userName = email.substring(0, atIndex);            
+            return userName.substring(0, 1).toUpperCase() + userName.substring(1);
+        }
+        
+        return email;
+    }
 }
+
