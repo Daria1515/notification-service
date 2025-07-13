@@ -1,22 +1,12 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:18-jdk-slim
 
 WORKDIR /app
 
-# Копируем pom.xml и загружаем зависимости
-COPY pom.xml .
-RUN apt-get update && apt-get install -y maven && mvn dependency:go-offline
-
-# Копируем исходный код
-COPY src ./src
-
-# Собираем приложение
-RUN mvn clean package -DskipTests
+# Копируем собранный JAR файл
+COPY target/*.jar app.jar
 
 # Создаем пользователя для безопасности
 RUN addgroup --system javauser && adduser --system --ingroup javauser javauser
-
-# Копируем JAR файл
-COPY target/*.jar app.jar
 
 # Меняем владельца файлов
 RUN chown -R javauser:javauser /app

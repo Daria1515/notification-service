@@ -34,17 +34,19 @@ public class EmailService {
         logger.info("Тема: {}", subject);
         logger.info("Текст: {}", body);
         logger.info("======================");
-        
-        MimeMessage message = sender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        
-        helper.setFrom(fromEmail);
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(body, true); // true для HTML
-        
-        sender.send(message);
-        logger.info("Email успешно отправлен на {}", to);
+        try {
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true); // true для HTML
+            sender.send(message);
+            logger.info("Email успешно отправлен на {}", to);
+        } catch (MessagingException e) {
+            logger.error("Ошибка при отправке email: {}", e.getMessage());
+            sendEmailFallback(to, subject, body, e);
+        }
     }
 
     public void sendEmailFallback(String to, String subject, String body, Exception e) {
